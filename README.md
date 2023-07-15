@@ -32,3 +32,44 @@ $ docker-compose run web ./manage.py createsuperuser
 `ALLOWED_HOSTS` -- настройка Django со списком разрешённых адресов. Если запрос прилетит на другой адрес, то сайт ответит ошибкой 400. Можно перечислить несколько адресов через запятую, например `127.0.0.1,192.168.0.1,site.test`. [Документация Django](https://docs.djangoproject.com/en/3.2/ref/settings/#allowed-hosts).
 
 `DATABASE_URL` -- адрес для подключения к базе данных PostgreSQL. Другие СУБД сайт не поддерживает. [Формат записи](https://github.com/jacobian/dj-database-url#url-schema).
+
+
+## Как запустить проект в кластере Minikube
+
+1. Запустите кластер Minikube командой:
+
+```
+minikube start
+```
+
+2. Запустите базу данных командой:
+
+```
+docker-compose up -d db
+```
+
+3. Создайте файл `configmap.yaml` и внесите в него переменные по примеру:
+
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: django-config
+data:
+  SECRET_KEY: ...
+  DATABASE_URL: ...
+  DEBUG: ...
+  ALLOWED_HOSTS: ...
+```
+4. Запустите Ingress командой:
+
+```
+kubectl apply -f ingress.yaml
+
+```
+5. Запустите проект командой:
+
+```
+kubectl apply -f django.yaml && kubectl apply -f configmap.yaml
+
+```
