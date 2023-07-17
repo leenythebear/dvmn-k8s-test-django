@@ -70,6 +70,6 @@ kubectl apply -f ingress.yaml
 5. Запустите проект командой:
 
 ```
-kubectl apply -f django.yaml && kubectl apply -f configmap.yaml
+kubectl apply -f django.yaml && kubectl apply -f configmap.yaml && kubectl apply -f django-clearsessions.yaml 
 
 ```
