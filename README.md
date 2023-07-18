@@ -37,19 +37,32 @@ $ docker-compose run web ./manage.py createsuperuser
 ## Как запустить проект в кластере Minikube
 
 1. Запустите кластер Minikube командой:
-
 ```
 minikube start
 ```
-
-2. Запустите базу данных командой:
-
+2. Сбилдите и загрузите образ приложения Django в Minikube командой (находясь в папке с Dockerfile):
 ```
-docker-compose up -d db
+minikube image build . -t django:1
 ```
+3. Установите helm: [инструкции по установке для различных ОС](https://helm.sh/docs/intro/install/)
 
-3. Создайте файл `configmap.yaml` и внесите в него переменные по примеру:
-
+4. Установите Helm Chart for PostgreSQL:
+```
+helm repo add stable https://charts.helm.sh/stable
+helm repo update
+helm install my-db oci://registry-1.docker.io/bitnamicharts/postgresql
+```
+5. При необходимости подключитесь к базе данных:
+```
+ kubectl run my-db-postgresql-client --rm --tty -i --restart='Never' --namespace default --image docker.io/bitnami/postgresql:15.3.0-debian-11-r24 --env="PGPASSWORD=$POSTGRES_PASSWORD" \
+      --command -- psql --host my-db-postgresql -U postgres -d postgres -p 5432
+```
+6. Создайте superuser:
+```
+kubectl exec -it <POD_NAME> --container <NAME> -- bash
+./manage.py createsuperuser
+```
+7. Создайте файл `configmap.yaml` и внесите в него переменные по примеру:
 ```
 apiVersion: v1
 kind: ConfigMap
@@ -59,17 +72,19 @@ data:
   SECRET_KEY: ...
   DATABASE_URL: ...
   DEBUG: ...
-  ALLOWED_HOSTS: ...
+  ALLOWED_HOSTS: star-burger.test
 ```
-4. Запустите Ingress командой:
-
+8. Пропишите в файле /etc/hosts на своём компьютере домен star-burger.test
+9. Запустите миграции командой:
+```
+kubectl apply -f migrate.yaml
+```
+10. Запустите Ingress командой:
 ```
 kubectl apply -f ingress.yaml
-
 ```
-5. Запустите проект командой:
-
+11. Запустите проект командой:
 ```
 kubectl apply -f django.yaml && kubectl apply -f configmap.yaml && kubectl apply -f django-clearsessions.yaml 
-
 ```
+12. Перейдите по адресу [http://star-burger.test/](http://star-burger.test/)
