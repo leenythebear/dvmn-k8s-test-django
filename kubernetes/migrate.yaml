@@ -9,7 +9,7 @@ spec:
       containers:
       - name: django
         image: docker.io/library/django:1
-        command: ["python", "manage.py", "migrate"]
+        command: ["python", "manage.py", "migrate", "--noinput"]
         imagePullPolicy: Never
         envFrom:
           - configMapRef:
